@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.notes.AddEditNoteFragment">
+
+    <LinearLayout
+        android:id="@+id/toolbar_note"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="?attr/colorSurface">
+
+        <ImageButton
+            android:id="@+id/button_back_note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            app:tint="?attr/colorOnSurface" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/button_speech_to_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_btn_speak_now"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/speech_to_text_desc"
+            android:layout_marginEnd="16dp"
+            app:tint="?attr/colorOnSurface" />
+
+        <ImageButton
+            android:id="@+id/button_lock_note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_lock_lock"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/lock_note"
+            android:layout_marginEnd="16dp"
+            app:tint="?attr/colorOnSurface" />
+
+        <ImageButton
+            android:id="@+id/button_delete_note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/delete_note"
+            android:layout_marginEnd="16dp"
+            app:tint="?attr/colorOnSurface" />
+
+        <Button
+            android:id="@+id/button_save_note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/save_note" />
+
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/edit_text_note_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar_note"
+        android:background="@android:color/transparent"
+        android:hint="@string/note_title_hint"
+        android:inputType="textCapSentences"
+        android:padding="16dp"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/edit_text_note_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/edit_text_note_title"
+        android.background="@android:color/transparent"
+        android:gravity="top"
+        android:hint="@string/note_content_hint"
+        android:inputType="textMultiLine|textCapSentences"
+        android:padding="16dp" />
+
+</RelativeLayout>
