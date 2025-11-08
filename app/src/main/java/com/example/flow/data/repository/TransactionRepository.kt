@@ -80,24 +80,26 @@ class TransactionRepository(
         }
     }
 
+    // --- UPDATED DELETE FUNCTION ---
     suspend fun delete(transaction: Transaction) {
-        // 1. Delete from Room
-        transactionDao.deleteTransaction(transaction)
-
-        // 2. Delete from Firestore
         try {
+            // 1. Delete from Firestore FIRST
             getTransactionsCollection().document(transaction.id).delete().await()
-        } catch (e: Exception) {
-            Log.e("TransactionRepo", "Error deleting transaction from Firestore", e)
-        }
 
-        // 3. (Optional) Delete receipt from Storage
-        transaction.receiptImageUrl?.let {
-            try {
-                storage.getReferenceFromUrl(it).delete().await()
-            } catch (e: Exception) {
-                Log.e("TransactionRepo", "Error deleting receipt from Storage", e)
+            // 2. ONLY if remote delete succeeds, delete from local Room
+            transactionDao.deleteTransaction(transaction)
+
+            // 3. (Optional) Delete receipt from Storage if it exists
+            transaction.receiptImageUrl?.let {
+                try {
+                    storage.getReferenceFromUrl(it).delete().await()
+                } catch (e: Exception) {
+                    Log.e("TransactionRepo", "Error deleting receipt from Storage", e)
+                }
             }
+        } catch (e: Exception) {
+            // If remote delete fails, log the error and DO NOT delete from local.
+            Log.e("TransactionRepo", "Error deleting transaction from Firestore", e)
         }
     }
 

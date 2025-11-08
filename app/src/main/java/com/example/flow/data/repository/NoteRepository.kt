@@ -47,11 +47,17 @@ class NoteRepository(
         }
     }
 
+    // --- UPDATED DELETE FUNCTION ---
     suspend fun delete(note: Note) {
-        noteDao.deleteNote(note)
         try {
+            // 1. Delete from remote Firestore database FIRST
             getNotesCollection().document(note.id).delete().await()
+
+            // 2. ONLY if remote delete succeeds, delete from local Room
+            noteDao.deleteNote(note)
+
         } catch (e: Exception) {
+            // If remote delete fails, log the error and DO NOT delete from local.
             Log.e("NoteRepository", "Error deleting note from Firestore", e)
         }
     }

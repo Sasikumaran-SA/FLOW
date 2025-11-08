@@ -3,8 +3,6 @@ package com.example.flow.ui.finance
 import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.*
-// FIX: ADD THIS IMPORT
-import androidx.lifecycle.Transformations
 import com.example.flow.data.local.AppDatabase
 import com.example.flow.data.model.Transaction
 import com.example.flow.data.repository.TransactionRepository
@@ -23,7 +21,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     val monthlySpending: LiveData<Double>
 
     private val auth = FirebaseAuth.getInstance()
-    // This version does NOT contain the 'hasSynced' flag or sync logic
+    private var hasSynced = false // --- ADDED ---
 
     init {
         val transactionDao = AppDatabase.getDatabase(application).transactionDao()
@@ -32,9 +30,21 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
         repository = TransactionRepository(transactionDao, firestore, storage)
         allTransactions = repository.getAllTransactions().asLiveData()
 
-        // This line will NOW work because Transformations is imported
-        monthlySpending = Transformations.map(allTransactions) { transactions ->
+        // This line is correct. It uses the .map KTX extension function.
+        monthlySpending = allTransactions.map { transactions ->
             calculateMonthlySpending(transactions)
+        }
+
+        syncTransactions() // --- ADDED ---
+    }
+
+    // --- ADDED ---
+    private fun syncTransactions() {
+        if (!hasSynced && auth.currentUser != null) {
+            viewModelScope.launch {
+                repository.syncTransactionsFromFirebase()
+                hasSynced = true
+            }
         }
     }
 

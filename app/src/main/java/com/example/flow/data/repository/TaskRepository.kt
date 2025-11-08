@@ -6,7 +6,7 @@ import com.example.flow.data.model.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.tasks.await // Make sure this import is here
+import kotlinx.coroutines.tasks.await
 
 class TaskRepository(
     private val taskDao: TaskDao,
@@ -33,7 +33,7 @@ class TaskRepository(
     }
 
     fun getTaskById(taskId: String): Flow<Task?> {
-        return taskDao.getTaskById(taskId=getUserId() ?: "")
+        return taskDao.getTaskById(taskId)
     }
 
     // --- Combined (Local + Remote) Operations ---
@@ -60,16 +60,33 @@ class TaskRepository(
         }
     }
 
+    // --- UPDATED DELETE FUNCTION ---
     suspend fun delete(task: Task) {
-        // 1. Delete from local Room database
-        taskDao.deleteTask(task)
-        // 2. Delete from remote Firestore database
         try {
+            // 1. Delete from remote Firestore database FIRST
             getTasksCollection().document(task.id).delete().await()
+
+            // 2. ONLY if remote delete succeeds, delete from local Room
+            taskDao.deleteTask(task)
+
         } catch (e: Exception) {
+            // If remote delete fails, log the error and DO NOT delete from local.
             Log.e("TaskRepository", "Error deleting task from Firestore", e)
         }
     }
 
-    // This version is INTENTIONALLY MISSING the 'syncTasksFromFirebase' function.
+    suspend fun syncTasksFromFirebase() {
+        if (getUserId() == null) return
+        try {
+            val snapshot = getTasksCollection().get().await()
+            val tasks = snapshot.toObjects(Task::class.java)
+            for (task in tasks) {
+                // insertTask uses onConflict = REPLACE, so this is safe
+                taskDao.insertTask(task)
+            }
+            Log.d("TaskRepository", "Successfully synced ${tasks.size} tasks.")
+        } catch (e: Exception) {
+            Log.e("TaskRepository", "Error syncing tasks from Firestore", e)
+        }
+    }
 }

@@ -6,13 +6,12 @@ import java.util.UUID
 
 @Entity(tableName = "notes")
 data class Note(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val title: String,
-    val content: String,
-    val isLocked: Boolean = false,
-    // We store a simple hash of the password.
-    // In a real app, use androidx.security.crypto to encrypt the content itself.
+    @PrimaryKey
+    val id: String = UUID.randomUUID().toString(), // ADDED default
+    val userId: String = "",                       // ADDED default
+    val title: String = "",                        // ADDED default
+    val content: String = "",                      // ADDED default
+    val isLocked: Boolean = false,                 // ADDED default
     val passwordHash: String? = null,
-    val lastModified: Long = System.currentTimeMillis(),
-    val userId: String
+    val lastModified: Long = 0L                    // ADDED default
 )

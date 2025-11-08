@@ -7,12 +7,13 @@ import java.util.UUID
 // This annotation tells Room to create a table named "tasks"
 @Entity(tableName = "tasks")
 data class Task(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val title: String,
+    @PrimaryKey
+    val id: String = UUID.randomUUID().toString(), // ADDED default
+    val userId: String = "",                       // ADDED default
+    val title: String = "",                        // ADDED default
     val description: String? = null,
-    val deadline: Long? = null, // Store as a timestamp
-    val priority: Int = 1, // 1=Low, 2=Medium, 3=High
-    val isCompleted: Boolean = false,
-    val listName: String = "Default",
-    val userId: String // Crucial for Firebase sync
+    val deadline: Long? = null,
+    val priority: Int = 1,                         // ADDED default
+    val listName: String = "Default",              // ADDED default
+    val isCompleted: Boolean = false               // ADDED default
 )

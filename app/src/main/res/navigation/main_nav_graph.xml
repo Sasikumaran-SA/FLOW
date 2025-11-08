@@ -5,7 +5,6 @@
     android:id="@+id/main_nav_graph"
     app:startDestination="@id/nav_tasks">
 
-    <!-- Task Fragments -->
     <fragment
         android:id="@+id/nav_tasks"
         android:name="com.example.flow.ui.tasks.TasksFragment"
@@ -14,7 +13,6 @@
         <action
             android:id="@+id/action_tasksFragment_to_addEditTaskFragment"
             app:destination="@id/addEditTaskFragment" />
-        <!-- ACTION IS MOVED FROM HERE -->
     </fragment>
     <fragment
         android:id="@+id/addEditTaskFragment"
@@ -28,7 +26,6 @@
             android:defaultValue="@null" />
     </fragment>
 
-    <!-- Finance Fragments -->
     <fragment
         android:id="@+id/nav_finance"
         android:name="com.example.flow.ui.finance.FinanceFragment"
@@ -50,7 +47,6 @@
             android:defaultValue="@null" />
     </fragment>
 
-    <!-- Note Fragments -->
     <fragment
         android:id="@+id/nav_notes"
         android:name="com.example.flow.ui.notes.NotesFragment"
@@ -77,14 +73,12 @@
             android:defaultValue="@null" />
     </fragment>
 
-    <!-- Settings Fragment -->
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.flow.ui.settings.SettingsFragment"
         android:label="Settings"
         tools:layout="@layout/fragment_settings" />
 
-    <!-- ACTION IS MOVED HERE, TO THE ROOT, TO BE TRULY GLOBAL -->
     <action
         android:id="@+id/action_global_to_settingsFragment"
         app:destination="@id/settingsFragment" />
