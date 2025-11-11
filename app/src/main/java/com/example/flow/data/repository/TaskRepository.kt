@@ -12,15 +12,14 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
-// --- UPDATED CONSTRUCTOR ---
 class TaskRepository(
     private val taskDao: TaskDao,
-    private val pendingDeletionDao: PendingDeletionDao,
+    private val pendingDeletionDao: PendingDeletionDao, // --- ADDED ---
     private val firestore: FirebaseFirestore
 ) {
 
     private val auth = FirebaseAuth.getInstance()
-    private val COLLECTION_NAME = "tasks"
+    private val COLLECTION_NAME = "tasks" // --- ADDED ---
 
     private fun getUserId(): String? {
         return auth.currentUser?.uid
@@ -29,87 +28,87 @@ class TaskRepository(
     private fun getTasksCollection(userId: String) = firestore
         .collection("users")
         .document(userId)
-        .collection(COLLECTION_NAME)
+        .collection(COLLECTION_NAME) // --- UPDATED ---
 
     fun getAllTasks(): Flow<List<Task>> {
         val userId = getUserId()
         return if (userId == null) {
             flowOf(emptyList())
         } else {
-            // DAO is already filtering out isDeleted=true items
             taskDao.getAllTasks(userId)
         }
     }
 
     fun getTaskById(taskId: String): Flow<Task?> {
-        val userId = getUserId()
-        return if (userId == null) {
-            flowOf(null)
-        } else {
-            taskDao.getTaskById(taskId)
-        }
+        return taskDao.getTaskById(taskId)
     }
 
     suspend fun insert(task: Task) {
+        // 1. Insert into local Room database
         taskDao.insertTask(task)
 
+        // 2. Insert into remote Firestore database (only if online)
         val userId = getUserId()
         if (userId == null) {
-            Log.w("TaskRepository", "User offline. Task saved locally.")
+            Log.w("TaskRepository", "User is offline. Task saved locally.")
             return
         }
+
         try {
             getTasksCollection(userId).document(task.id).set(task).await()
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            Log.e("TaskRepository", "Saved locally, but Firestore insert failed.", e)
+            Log.e("TaskRepository", "Error inserting task to Firestore", e)
         }
     }
 
     suspend fun update(task: Task) {
+        // 1. Update in local Room database
         taskDao.updateTask(task)
 
+        // 2. Update in remote Firestore database (only if online)
         val userId = getUserId()
         if (userId == null) {
-            Log.w("TaskRepository", "User offline. Task updated locally.")
+            Log.w("TaskRepository", "User is offline. Task updated locally.")
             return
         }
+
         try {
             getTasksCollection(userId).document(task.id).set(task).await()
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            Log.e("TaskRepository", "Updated locally, but Firestore update failed.", e)
+            Log.e("TaskRepository", "Error updating task in Firestore", e)
         }
     }
 
-    // --- HEAVILY UPDATED DELETE LOGIC ---
+    // --- UPDATED DELETE LOGIC ---
     suspend fun delete(task: Task) {
-        try {
-            // 1. Delete from local Room database FIRST.
-            // This makes the UI update instantly.
-            taskDao.deleteTask(task)
-
-            // 2. Add a "tombstone" to the pending deletions queue.
-            pendingDeletionDao.insert(PendingDeletion(task.id, COLLECTION_NAME))
-
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.e("TaskRepository", "Error deleting task locally", e)
-        }
+        // 1. Delete from local Room database FIRST
+        taskDao.deleteTask(task)
+        // 2. Add to pending deletions queue
+        pendingDeletionDao.insert(PendingDeletion(id = task.id, collectionName = COLLECTION_NAME))
+        Log.d("TaskRepository", "Task deleted locally and queued for remote deletion.")
     }
 
-    // --- HEAVILY UPDATED SYNC LOGIC ---
+    // --- UPDATED SYNC LOGIC ---
     suspend fun syncTasksFromFirebase() {
-        val userId = getUserId() ?: return
+        val userId = getUserId()
+        if (userId == null) {
+            Log.d("TaskRepository", "User is offline, cannot sync.")
+            return
+        }
+
         try {
-            // 1. Get all IDs of items we've deleted locally.
+            // 1. Get IDs of all locally deleted items
             val deletedIds = pendingDeletionDao.getPendingDeletionIdsByCollection(COLLECTION_NAME)
 
+            // 2. Get all items from Firebase
             val snapshot = getTasksCollection(userId).get().await()
             val tasks = snapshot.toObjects(Task::class.java)
 
+            // 3. Sync to Room
             for (task in tasks) {
-                // 2. ONLY add tasks from Firebase if they are NOT in our deletion queue
+                // ONLY insert if the task is NOT in our pending deletion queue
                 if (task.id !in deletedIds) {
                     taskDao.insertTask(task)
                 }
@@ -121,28 +120,28 @@ class TaskRepository(
         }
     }
 
-    // --- NEW FUNCTION ---
-    /**
-     * Tries to clear the pending deletion queue by deleting items from Firebase.
-     */
+    // --- ADDED FUNCTION ---
     suspend fun attemptPendingDeletions() {
-        val userId = getUserId() ?: return // Not online
+        val userId = getUserId()
+        if (userId == null) {
+            Log.d("TaskRepository", "User is offline, cannot process pending deletions.")
+            return
+        }
 
-        val pendingDeletions = pendingDeletionDao.getAllPendingDeletions()
-            .filter { it.collectionName == COLLECTION_NAME }
+        val pending = pendingDeletionDao.getPendingDeletionIdsByCollection(COLLECTION_NAME)
+        if (pending.isEmpty()) return
 
-        for (pending in pendingDeletions) {
+        Log.d("TaskRepository", "Attempting to clear ${pending.size} pending deletions...")
+        for (id in pending) {
             try {
                 // 1. Try to delete from Firebase
-                getTasksCollection(userId).document(pending.id).delete().await()
-
-                // 2. If successful, remove it from the local queue
-                pendingDeletionDao.delete(pending)
-                Log.i("TaskRepository", "Successfully deleted ${pending.id} from Firebase.")
-
+                getTasksCollection(userId).document(id).delete().await()
+                // 2. If successful, remove from local queue
+                pendingDeletionDao.delete(PendingDeletion(id, COLLECTION_NAME))
+                Log.d("TaskRepository", "Successfully deleted $id from Firebase.")
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Log.e("TaskRepository", "Failed to delete ${pending.id} from Firebase. Will retry later.", e)
+                Log.e("TaskRepository", "Failed to delete $id from Firebase. Will retry later.", e)
             }
         }
     }

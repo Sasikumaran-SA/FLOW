@@ -12,6 +12,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.flow.LoginActivity
+import com.example.flow.ThemeManager
+import com.example.flow.ThemeManager.ThemeMode
 import com.example.flow.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -39,6 +41,7 @@ class SettingsFragment : Fragment() {
         storage = FirebaseStorage.getInstance()
 
         val userEmailText = view.findViewById<TextView>(R.id.text_user_email)
+		val themeButton = view.findViewById<Button>(R.id.button_theme)
         val logoutButton = view.findViewById<Button>(R.id.button_logout)
         val deleteAccountButton = view.findViewById<Button>(R.id.button_delete_account)
 
@@ -51,6 +54,12 @@ class SettingsFragment : Fragment() {
         logoutButton.setOnClickListener {
             showLogoutConfirmation()
         }
+
+		// Theme chooser
+		updateThemeButtonLabel(themeButton)
+		themeButton.setOnClickListener {
+			showThemeChooser(themeButton)
+		}
 
         // Delete Account logic
         deleteAccountButton.setOnClickListener {
@@ -119,5 +128,37 @@ class SettingsFragment : Fragment() {
                     Toast.makeText(context, "Failed to delete account. Try logging in again. ${task.exception?.message}", Toast.LENGTH_LONG).show()
                 }
             }
+    }
+
+    private fun showThemeChooser(anchor: View) {
+        val modes = arrayOf("System", "Light", "Dark")
+        val current = when (ThemeManager.getSavedTheme(requireContext())) {
+            ThemeMode.SYSTEM -> 0
+            ThemeMode.LIGHT -> 1
+            ThemeMode.DARK -> 2
+        }
+        AlertDialog.Builder(requireContext())
+            .setTitle("Choose theme")
+            .setSingleChoiceItems(modes, current) { dialog, which ->
+                val mode = when (which) {
+                    0 -> ThemeMode.SYSTEM
+                    1 -> ThemeMode.LIGHT
+                    else -> ThemeMode.DARK
+                }
+                ThemeManager.saveAndApplyTheme(requireContext(), mode)
+                if (anchor is Button) updateThemeButtonLabel(anchor)
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun updateThemeButtonLabel(button: Button) {
+        val label = when (ThemeManager.getSavedTheme(requireContext())) {
+            ThemeMode.SYSTEM -> "Theme: System"
+            ThemeMode.LIGHT -> "Theme: Light"
+            ThemeMode.DARK -> "Theme: Dark"
+        }
+        button.text = label
     }
 }

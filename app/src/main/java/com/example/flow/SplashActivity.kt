@@ -12,6 +12,8 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Apply saved theme before inflating any views
+        ThemeManager.applySavedTheme(this)
         setContentView(R.layout.activity_splash) // Set the layout
 
         auth = FirebaseAuth.getInstance()

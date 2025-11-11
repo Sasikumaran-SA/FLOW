@@ -41,7 +41,7 @@
         <activity
             android:name=".SplashActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.NoActionBar"> <!-- Optional: to hide action bar -->
+			android:theme="@style/Theme.FLOW"> <!-- Use Material3 app theme for Material widgets -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

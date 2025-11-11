@@ -12,9 +12,10 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_alignParentTop="true"
-        android:background="?attr/colorPrimary"
-        app:titleTextColor="@android:color/white"
-        app:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+		android:background="?attr/colorSurface"
+		app:titleCentered="true"
+		app:navigationIconTint="?attr/colorOnSurface"
+		app:titleTextColor="?attr/colorOnSurface" />
 
     <!-- UPDATE THE FRAGMENT: layout_below toolbar, layout_above bottom_navigation -->
     <fragment
@@ -32,6 +33,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        app:menu="@menu/bottom_nav_menu" />
+		android:background="?attr/colorSurface"
+		app:labelVisibilityMode="labeled"
+		app:itemIconTint="@color/selector_bottom_nav"
+		app:itemTextColor="@color/selector_bottom_nav"
+		app:itemRippleColor="?attr/colorPrimary"
+		app:menu="@menu/bottom_nav_menu" />
 
 </RelativeLayout>

@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+	<color name="black">#FF000000</color>
+	<color name="white">#FFFFFFFF</color>
+	<!-- Brand palette for Material3 -->
+	<color name="md_theme_light_primary">#6750A4</color>
+	<color name="md_theme_light_onPrimary">#FFFFFF</color>
+	<color name="md_theme_light_secondary">#625B71</color>
+	<color name="md_theme_light_onSecondary">#FFFFFF</color>
+	<color name="md_theme_light_surface">#FFFBFE</color>
+	<color name="md_theme_light_onSurface">#1C1B1F</color>
+	<color name="md_theme_light_outline">#79747E</color>
+	<color name="md_theme_light_error">#B3261E</color>
+	<color name="md_theme_light_onError">#FFFFFF</color>
+
+	<color name="md_theme_dark_primary">#D0BCFF</color>
+	<color name="md_theme_dark_onPrimary">#381E72</color>
+	<color name="md_theme_dark_secondary">#CCC2DC</color>
+	<color name="md_theme_dark_onSecondary">#332D41</color>
+	<color name="md_theme_dark_surface">#1C1B1F</color>
+	<color name="md_theme_dark_onSurface">#E6E1E5</color>
+	<color name="md_theme_dark_outline">#938F99</color>
+	<color name="md_theme_dark_error">#F2B8B5</color>
+	<color name="md_theme_dark_onError">#601410</color>
 </resources>

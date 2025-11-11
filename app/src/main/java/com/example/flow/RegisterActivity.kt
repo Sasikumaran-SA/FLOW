@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -15,7 +15,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var emailEditText: EditText
     private lateinit var passwordEditText: EditText
     private lateinit var registerButton: Button
-    private lateinit var loginTextView: TextView
+    private lateinit var goLoginButton: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,15 +26,15 @@ class RegisterActivity : AppCompatActivity() {
         emailEditText = findViewById(R.id.edit_text_email)
         passwordEditText = findViewById(R.id.edit_text_password)
         registerButton = findViewById(R.id.button_register)
-        loginTextView = findViewById(R.id.text_view_login)
+        goLoginButton = findViewById(R.id.button_go_login)
 
         // Set click listener for the Register button
         registerButton.setOnClickListener {
             handleRegister()
         }
 
-        // Set click listener for the "Login" text
-        loginTextView.setOnClickListener {
+        // Navigate back to Login
+        goLoginButton.setOnClickListener {
             // Finish this activity and go back to Login
             finish()
         }

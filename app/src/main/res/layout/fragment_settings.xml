@@ -23,7 +23,15 @@
         android:layout_marginBottom="32dp"
         tools:text="Logged in as: user@example.com" />
 
-    <Button
+	<com.google.android.material.button.MaterialButton
+		android:id="@+id/button_theme"
+		style="?attr/materialButtonOutlinedStyle"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Theme: System/Light/Dark"
+		android:layout_marginBottom="16dp" />
+
+	<com.google.android.material.button.MaterialButton
         android:id="@+id/button_logout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -34,7 +42,7 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <Button
+	<com.google.android.material.button.MaterialButton
         android:id="@+id/button_delete_account"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

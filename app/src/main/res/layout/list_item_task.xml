@@ -8,7 +8,12 @@
     android:layout_marginTop="4dp"
     android:layout_marginEnd="8dp"
     android:layout_marginBottom="4dp"
-    app:cardElevation="2dp">
+	android:foreground="?attr/selectableItemBackground"
+	app:cardUseCompatPadding="true"
+	app:cardCornerRadius="12dp"
+	app:strokeWidth="1dp"
+	app:strokeColor="?attr/colorOutline"
+	app:cardElevation="2dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -30,8 +35,7 @@
             android:layout_marginStart="12dp"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textAppearance="?attr/textAppearanceListItem"
-            android:textSize="18sp"
+			android:textAppearance="?attr/textAppearanceBodyLarge"
             app:layout_constraintEnd_toStartOf="@+id/text_task_priority"
             app:layout_constraintStart_toEndOf="@+id/checkbox_task_completed"
             app:layout_constraintTop_toTopOf="parent"
@@ -42,29 +46,29 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp"
+			android:textColor="?attr/colorOnSurface"
+			android:textAppearance="?attr/textAppearanceBodyMedium"
             app:layout_constraintEnd_toStartOf="@+id/text_task_priority"
             app:layout_constraintStart_toStartOf="@+id/text_task_title"
             app:layout_constraintTop_toBottomOf="@+id/text_task_title"
             tools:text="Due: Nov 10, 2025" />
 
-        <TextView
+		<TextView
             android:id="@+id/text_task_priority"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:background="@drawable/ic_tasks"
-            android:backgroundTint="@android:color/holo_red_dark"
+			android:background="@drawable/priority_chip_background"
+			android:backgroundTint="?attr/colorPrimary"
             android:gravity="center"
             android:padding="8dp"
-            android:textAppearance="?attr/textAppearanceBody2"
+			android:textAppearance="?attr/textAppearanceLabelLarge"
             android:textColor="@android:color/white"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:backgroundTint="@android:color/holo_red_dark"
+			tools:backgroundTint="@android:color/holo_red_dark"
             tools:text="High" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

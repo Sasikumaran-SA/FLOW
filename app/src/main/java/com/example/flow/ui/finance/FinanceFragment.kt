@@ -20,7 +20,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.flow.R
-// ADD THIS IMPORT
+import com.example.flow.SessionState
 import com.example.flow.ui.finance.FinanceFragmentDirections
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.NumberFormat
@@ -61,6 +61,7 @@ class FinanceFragment : Fragment() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     Toast.makeText(context, "Authentication succeeded!", Toast.LENGTH_SHORT).show()
+                    SessionState.financeAuthenticated = true
                     showFinanceData()
                 }
 
@@ -83,6 +84,11 @@ class FinanceFragment : Fragment() {
 
         unlockButton.setOnClickListener {
             checkBiometricSupportAndAuthenticate()
+        }
+
+        // If authenticated earlier in this app session, skip prompting
+        if (SessionState.financeAuthenticated) {
+            showFinanceData()
         }
 
         // Setup FAB (should be outside the auth block to be visible, but only enabled after auth)
