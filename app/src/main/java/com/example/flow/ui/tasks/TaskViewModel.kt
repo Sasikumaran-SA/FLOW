@@ -18,24 +18,37 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     val allTasks: LiveData<List<Task>>
 
     private val auth = FirebaseAuth.getInstance()
-    private var hasSynced = false // --- ADDED ---
+    private var hasSynced = false
 
     init {
-        val taskDao = AppDatabase.getDatabase(application).taskDao()
+        val db = AppDatabase.getDatabase(application)
+        val taskDao = db.taskDao()
+        val pendingDeletionDao = db.pendingDeletionDao() // --- ADDED ---
         val firestore = FirebaseFirestore.getInstance()
-        repository = TaskRepository(taskDao, firestore)
+        // --- UPDATED CONSTRUCTOR ---
+        repository = TaskRepository(taskDao, pendingDeletionDao, firestore)
+
         allTasks = repository.getAllTasks().asLiveData()
 
-        syncTasks() // --- ADDED ---
+        // Sync data and attempt to clear pending deletions on startup
+        syncTasks()
+        attemptPendingDeletions()
     }
 
-    // --- ADDED ---
     private fun syncTasks() {
-        // Only sync if we haven't already and a user is logged in
         if (!hasSynced && auth.currentUser != null) {
             viewModelScope.launch {
                 repository.syncTasksFromFirebase()
                 hasSynced = true
+            }
+        }
+    }
+
+    // --- ADDED ---
+    private fun attemptPendingDeletions() {
+        if (auth.currentUser != null) {
+            viewModelScope.launch {
+                repository.attemptPendingDeletions()
             }
         }
     }
@@ -50,10 +63,11 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     fun delete(task: Task) = viewModelScope.launch {
         repository.delete(task)
+        // Try to delete from Firebase immediately
+        attemptPendingDeletions()
     }
 
     fun getTaskById(taskId: String): LiveData<Task?> {
-        // .asLiveData() converts the Flow to LiveData
         return repository.getTaskById(taskId).asLiveData()
     }
 

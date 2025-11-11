@@ -7,7 +7,7 @@ import com.example.flow.data.model.Note
 import com.example.flow.data.repository.NoteRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.Flow // Keep your Flow import
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.Base64
@@ -22,10 +22,17 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         val db = AppDatabase.getDatabase(application)
+        val noteDao = db.noteDao()
+        val pendingDeletionDao = db.pendingDeletionDao() // --- ADDED ---
         val firestore = FirebaseFirestore.getInstance()
-        repository = NoteRepository(db.noteDao(), firestore)
+        // --- UPDATED CONSTRUCTOR ---
+        repository = NoteRepository(noteDao, pendingDeletionDao, firestore)
+
         allNotes = repository.getAllNotes().asLiveData()
+
+        // Sync data and attempt to clear pending deletions on startup
         syncNotes()
+        attemptPendingDeletions()
     }
 
     private fun syncNotes() {
@@ -33,6 +40,15 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
             viewModelScope.launch {
                 repository.syncNotesFromFirebase()
                 hasSynced = true
+            }
+        }
+    }
+
+    // --- ADDED ---
+    private fun attemptPendingDeletions() {
+        if (auth.currentUser != null) {
+            viewModelScope.launch {
+                repository.attemptPendingDeletions()
             }
         }
     }
@@ -47,9 +63,10 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun delete(note: Note) = viewModelScope.launch {
         repository.delete(note)
+        // Try to delete from Firebase immediately
+        attemptPendingDeletions()
     }
 
-    // This is your updated function, which is correct
     fun getNoteById(noteId: String): Flow<Note?> {
         return repository.getNoteById(noteId)
     }
@@ -58,6 +75,8 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         return auth.currentUser?.uid
     }
 
+    // ... (Your hashPassword and encrypt/decrypt functions remain unchanged) ...
+
     fun hashPassword(password: String): String {
         val bytes = password.toByteArray()
         val md = MessageDigest.getInstance("SHA-256")
@@ -65,29 +84,21 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         return Base64.getEncoder().encodeToString(digest)
     }
 
-    /**
-     * "Encrypts" content. This is a simple XOR obfuscation.
-     */
     fun encryptContent(content: String, key: String): String {
         val result = StringBuilder()
         for (i in content.indices) {
-            // FIX: Added .toChar() to convert the Int result back to a Char
             val xorChar = (content[i].code xor key[i % key.length].code).toChar()
             result.append(xorChar)
         }
         return Base64.getEncoder().encodeToString(result.toString().toByteArray(Charsets.UTF_8))
     }
 
-    /**
-     * "Decrypts" content obfuscated by encryptContent.
-     */
     fun decryptContent(encryptedContent: String, key: String): String {
         val decodedBytes = Base64.getDecoder().decode(encryptedContent)
         val decoded = String(decodedBytes, Charsets.UTF_8)
 
         val result = StringBuilder()
         for (i in decoded.indices) {
-            // FIX: Added .toChar() to convert the Int result back to a Char
             val xorChar = (decoded[i].code xor key[i % key.length].code).toChar()
             result.append(xorChar)
         }

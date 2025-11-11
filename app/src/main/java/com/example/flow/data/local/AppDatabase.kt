@@ -5,17 +5,26 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.flow.data.model.Note
+import com.example.flow.data.model.PendingDeletion // --- ADD THIS IMPORT ---
 import com.example.flow.data.model.Task
 import com.example.flow.data.model.Transaction
 
-// Add 'Note' to the entities list and increment the version number
-@Database(entities = [Task::class, Transaction::class, Note::class], version = 3, exportSchema = false)
-abstract class AppDatabase : RoomDatabase() {
+@Database(
+    entities = [
+        Task::class,
+        Transaction::class,
+        Note::class,
+        PendingDeletion::class // --- ADD THIS LINE ---
+    ],
+    version = 2, // --- INCREMENT YOUR DATABASE VERSION ---
+    exportSchema = false
+)
+public abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun taskDao(): TaskDao
-    abstract fun transactionDao(): TransactionDao
-    // Add the abstract function for NoteDao
-    abstract fun noteDao(): NoteDao
+    public abstract fun taskDao(): TaskDao
+    public abstract fun transactionDao(): TransactionDao
+    public abstract fun noteDao(): NoteDao
+    public abstract fun pendingDeletionDao(): PendingDeletionDao // --- ADD THIS LINE ---
 
     companion object {
         @Volatile
@@ -28,8 +37,9 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "flow_database"
                 )
-                    // Add fallbackToDestructiveMigration to handle version increment
-                    .fallbackToDestructiveMigration()
+                    // --- ADD MIGRATION IF version > 1 ---
+                    // You must add a migration or use fallbackToDestructiveMigration
+                    .fallbackToDestructiveMigration() // Easiest for development
                     .build()
                 INSTANCE = instance
                 instance
