@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
@@ -37,7 +38,7 @@ class AddEditNoteFragment : Fragment() {
 
     private var currentNote: Note? = null
     private var isNoteLocked: Boolean = false
-    private var currentPasswordHash: String? =null
+    private var currentPasswordHash: String? = null
 
     // Launcher for Speech-to-Text
     private val speechToTextLauncher = registerForActivityResult(
@@ -62,7 +63,8 @@ class AddEditNoteFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = ViewModelProvider(this).get(NoteViewModel::class.java)
+        // Use 'requireActivity()' to get the same Activity-scoped ViewModel
+        viewModel = ViewModelProvider(requireActivity()).get(NoteViewModel::class.java)
 
         // Find all views
         titleEditText = view.findViewById(R.id.edit_text_note_title)
@@ -78,13 +80,10 @@ class AddEditNoteFragment : Fragment() {
             // --- EDIT MODE ---
             loadNoteData(noteId)
         } ?: run {
-            // --- ADD MODE ---
-            // If decryptedContent is passed, it means we unlocked from the list
-            // and are now editing a previously locked note.
-            args.decryptedContent?.let {
-                contentEditText.setText(it)
-                // We don't set isNoteLocked = true here, user must re-lock
-            }
+            // --- ADD NEW NOTE MODE ---
+            isNoteLocked = false
+            currentNote = null
+            deleteButton.visibility = View.GONE // Can't delete a new note
         }
 
         updateLockIcon()
@@ -109,10 +108,17 @@ class AddEditNoteFragment : Fragment() {
         speechButton.setOnClickListener {
             startSpeechToText()
         }
+
+        // Handle system back button press
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Simply pop back, no special logic needed
+                findNavController().popBackStack()
+            }
+        })
     }
 
     private fun loadNoteData(id: String) {
-        // UPDATED: Use lifecycleScope.launch and .collect() to observe the Flow
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.getNoteById(id).collect { note ->
                 note?.let {
@@ -121,11 +127,12 @@ class AddEditNoteFragment : Fragment() {
                     isNoteLocked = it.isLocked
                     currentPasswordHash = it.passwordHash
 
-                    // If note is locked, content is encrypted.
-                    // If we are editing, we must have passed the decrypted content via SafeArgs.
-                    if (it.isLocked) {
-                        contentEditText.setText(args.decryptedContent ?: "")
+                    // --- SIMPLIFIED LOGIC ---
+                    // If decryptedContent was passed from NotesFragment, use it
+                    if (args.decryptedContent != null) {
+                        contentEditText.setText(args.decryptedContent)
                     } else {
+                        // Otherwise, this is an unlocked note, show its content
                         contentEditText.setText(it.content)
                     }
                     updateLockIcon()
@@ -134,12 +141,14 @@ class AddEditNoteFragment : Fragment() {
         }
     }
 
+    // --- REMOVED 'showPasswordPromptForViewing' ---
+    // This logic is no longer needed here.
+
     private fun updateLockIcon() {
         if (isNoteLocked) {
             lockButton.setImageResource(android.R.drawable.ic_lock_lock)
             lockButton.contentDescription = getString(R.string.unlock_note)
         } else {
-            // FIX: Added 'android.R.drawable'
             lockButton.setImageResource(R.drawable.ic_lock_open)
             lockButton.contentDescription = getString(R.string.lock_note)
         }
@@ -181,6 +190,7 @@ class AddEditNoteFragment : Fragment() {
             title = getString(R.string.unlock_note_title)
             confirmPasswordLayout.visibility = View.GONE
         } else {
+            // This case is for 'saveNote' on an already-locked note
             title = getString(R.string.confirm_password_title)
             confirmPasswordLayout.visibility = View.GONE
         }
@@ -211,13 +221,14 @@ class AddEditNoteFragment : Fragment() {
                     val hashed = viewModel.hashPassword(password)
                     if (hashed == currentPasswordHash) {
                         if (isUnlocking) {
-                            // User chose to unlock the note
+                            // User chose to explicitly unlock the note
                             isNoteLocked = false
                             currentPasswordHash = null
                             updateLockIcon()
                             Toast.makeText(context, R.string.password_removed, Toast.LENGTH_SHORT).show()
                         } else {
                             // User is saving an already-locked note
+                            // This 'else' branch is triggered by saveNote()
                             saveLockedNote(password)
                         }
                     } else {
@@ -243,6 +254,7 @@ class AddEditNoteFragment : Fragment() {
 
         if (isNoteLocked) {
             // If note is locked, we need to confirm password to re-encrypt and save
+            // This will call saveLockedNote(password) on success
             showPasswordPrompt(isSettingPassword = false, isUnlocking = false)
         } else {
             // Note is not locked, save directly
@@ -277,7 +289,7 @@ class AddEditNoteFragment : Fragment() {
         }
     }
 
-    // This is called from the saveNote() logic if the note is locked
+    // This is called from the showPasswordPrompt() logic
     private fun saveLockedNote(password: String) {
         val title = titleEditText.text.toString().trim()
         val content = contentEditText.text.toString().trim()
@@ -293,6 +305,7 @@ class AddEditNoteFragment : Fragment() {
             passwordHash = currentPasswordHash, // Hash remains the same
             lastModified = System.currentTimeMillis()
         ) ?: Note(
+            // This case handles a NEW note that is locked before first save
             title = title,
             content = encryptedContent,
             isLocked = true,

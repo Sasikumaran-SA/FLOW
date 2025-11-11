@@ -1,10 +1,10 @@
 package com.example.flow.ui.notes
 
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -33,7 +33,9 @@ class NotesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(this).get(NoteViewModel::class.java)
+        // Use 'requireActivity()' to scope the ViewModel to the Activity
+        // This makes it easier to share the same ViewModel instance
+        viewModel = ViewModelProvider(requireActivity()).get(NoteViewModel::class.java)
 
         setupRecyclerView(view)
 
@@ -42,7 +44,8 @@ class NotesFragment : Fragment() {
         }
 
         view.findViewById<FloatingActionButton>(R.id.fab_add_note).setOnClickListener {
-            // Navigate to AddEditNoteFragment, passing null for noteId
+            // Navigate to AddEditNoteFragment for a NEW note
+            // Pass null for noteId and null for decryptedContent
             val action = NotesFragmentDirections.actionNavNotesToAddEditNoteFragment(null, null)
             findNavController().navigate(action)
         }
@@ -50,12 +53,14 @@ class NotesFragment : Fragment() {
 
     private fun setupRecyclerView(view: View) {
         noteAdapter = NoteListAdapter { note ->
+            // --- THIS IS THE MAIN LOGIC FIX ---
             if (note.isLocked) {
-                // Show password prompt if the note is locked
-                showPasswordPrompt(note, false)
+                // If the note is locked, show password dialog FIRST
+                showPasswordDialog(note)
             } else {
-                // Navigate directly to edit screen
-                val action = NotesFragmentDirections.actionNavNotesToAddEditNoteFragment(note.id, null)
+                // Note is not locked, navigate directly
+                // Pass the note's ID and its (unlocked) content
+                val action = NotesFragmentDirections.actionNavNotesToAddEditNoteFragment(note.id, note.content)
                 findNavController().navigate(action)
             }
         }
@@ -65,36 +70,54 @@ class NotesFragment : Fragment() {
         recyclerView.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
     }
 
-    private fun showPasswordPrompt(note: Note, isEditingLockedNote: Boolean) {
-        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_password_prompt, null)
-        val passwordInput = dialogView.findViewById<EditText>(R.id.edit_text_password)
-        val title = if (isEditingLockedNote) getString(R.string.confirm_password_title) else getString(R.string.unlock_note_title)
+    /**
+     * Shows a password prompt dialog to unlock a note.
+     * Only navigates to the editor on success.
+     */
+    private fun showPasswordDialog(note: Note) {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle(getString(R.string.unlock_note_title))
 
-        AlertDialog.Builder(requireContext())
-            .setTitle(title)
-            .setView(dialogView)
-            .setPositiveButton(R.string.confirm) { dialog, _ ->
-                val password = passwordInput.text.toString()
-                if (password.isEmpty()) {
-                    Toast.makeText(context, R.string.password_empty, Toast.LENGTH_SHORT).show()
-                } else {
-                    val hashed = viewModel.hashPassword(password)
-                    // FIX: All 'note' properties are now resolved
-                    if (hashed == note.passwordHash) {
-                        // Correct password
-                        val decryptedContent = viewModel.decryptContent(note.content, password)
-                        val action = NotesFragmentDirections.actionNavNotesToAddEditNoteFragment(note.id, decryptedContent)
-                        findNavController().navigate(action)
-                    } else {
-                        // Incorrect password
-                        Toast.makeText(context, R.string.incorrect_password, Toast.LENGTH_SHORT).show()
-                    }
+        // Set up the input
+        val input = EditText(requireContext())
+        input.hint = "Enter password"
+        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        builder.setView(input)
+
+        // Set up the buttons
+        builder.setPositiveButton(R.string.confirm) { dialog, _ ->
+            val password = input.text.toString()
+
+            if (password.isEmpty()) {
+                Toast.makeText(context, R.string.password_empty, Toast.LENGTH_SHORT).show()
+                return@setPositiveButton
+            }
+
+            // 1. Hash the entered password to check for a match
+            val hashed = viewModel.hashPassword(password)
+
+            if (hashed == note.passwordHash) {
+                // 2. Password hash matches, now try to decrypt
+                try {
+                    val decryptedContent = viewModel.decryptContent(note.content, password)
+
+                    // 3. Decryption success! Navigate to editor with decrypted content
+                    val action = NotesFragmentDirections.actionNavNotesToAddEditNoteFragment(note.id, decryptedContent)
+                    findNavController().navigate(action)
+
+                } catch (e: Exception) {
+                    // This can happen if decryption fails for some reason
+                    Toast.makeText(context, "Decryption failed.", Toast.LENGTH_SHORT).show()
                 }
-                dialog.dismiss()
+            } else {
+                // Password hash does not match
+                Toast.makeText(context, R.string.incorrect_password, Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton(android.R.string.cancel) { dialog, _ ->
-                dialog.cancel()
-            }
-            .show()
+        }
+        builder.setNegativeButton(android.R.string.cancel) { dialog, _ ->
+            dialog.cancel()
+        }
+
+        builder.show()
     }
 }
