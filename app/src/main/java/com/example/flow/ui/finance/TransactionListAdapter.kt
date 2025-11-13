@@ -39,7 +39,6 @@ class TransactionListAdapter(
             descriptionTextView.text = transaction.description
             dateTextView.text = formatDate(transaction.date)
 
-            // Format amount
             val format = NumberFormat.getCurrencyInstance()
             val amountString = format.format(transaction.amount)
             if (transaction.isIncome) {

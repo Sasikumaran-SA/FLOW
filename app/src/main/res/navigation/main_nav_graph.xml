@@ -26,25 +26,51 @@
             android:defaultValue="@null" />
     </fragment>
 
+<!--    <fragment-->
+<!--        android:id="@+id/nav_finance"-->
+<!--        android:name="com.example.flow.ui.finance.FinanceFragment"-->
+<!--        android:label="Finances"-->
+<!--        tools:layout="@layout/fragment_finance" >-->
+<!--        <action-->
+<!--            android:id="@+id/action_financeFragment_to_addEditTransactionFragment"-->
+<!--            app:destination="@id/addEditTransactionFragment" />-->
+<!--    </fragment>-->
+<!--    <fragment-->
+<!--        android:id="@+id/addEditTransactionFragment"-->
+<!--        android:name="com.example.flow.ui.finance.AddEditTransactionFragment"-->
+<!--        android:label="Transaction Details"-->
+<!--        tools:layout="@layout/fragment_add_edit_transaction" >-->
+<!--        <argument-->
+<!--            android:name="transactionId"-->
+<!--            app:argType="string"-->
+<!--            app:nullable="true"-->
+<!--            android:defaultValue="@null" />-->
+<!--    </fragment>-->
+
     <fragment
         android:id="@+id/nav_finance"
         android:name="com.example.flow.ui.finance.FinanceFragment"
         android:label="Finances"
-        tools:layout="@layout/fragment_finance" >
+        tools:layout="@layout/fragment_finance">
+
         <action
             android:id="@+id/action_financeFragment_to_addEditTransactionFragment"
             app:destination="@id/addEditTransactionFragment" />
+
     </fragment>
+
     <fragment
         android:id="@+id/addEditTransactionFragment"
         android:name="com.example.flow.ui.finance.AddEditTransactionFragment"
-        android:label="Transaction Details"
-        tools:layout="@layout/fragment_add_edit_transaction" >
+        android:label="Transaction"
+        tools:layout="@layout/fragment_add_edit_transaction">
+
         <argument
             android:name="transactionId"
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />
+
     </fragment>
 
     <fragment
