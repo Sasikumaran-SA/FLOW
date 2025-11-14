@@ -92,16 +92,17 @@ class TransactionRepository(
             return
         }
         try {
-            getTransactionsCollection(userId).document(transaction.id).set(transaction).addOnSuccessListener {
-                Log.d("FirebaseTest", "SUCCESS! Direct write to Firestore worked.")
-            }
-                .addOnFailureListener { e ->
-                    Log.e("FirebaseTest", "FAILURE! Direct write FAILED.", e)
-                }
-
+            // Create a document reference to get the ID
+            val docRef = getTransactionsCollection(userId).document()
+            // Create a new transaction object with the document ID included
+            val transactionWithId = transaction.copy(id = docRef.id)
+            docRef.set(transactionWithId).await()
+            Log.d("TransactionRepo", "SUCCESS! Transaction written to Firestore: ${docRef.id}")
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.e("TransactionRepo", "Error inserting transaction to Firestore", e)
+            // Show user-facing alert on save failure
+            // Note: This would require passing context or using a callback
         }
     }
 
@@ -114,10 +115,13 @@ class TransactionRepository(
             return
         }
         try {
+            // Ensure the transaction object includes the document ID
             getTransactionsCollection(userId).document(transaction.id).set(transaction).await()
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.e("TransactionRepo", "Error updating transaction in Firestore", e)
+            // Show user-facing alert on save failure
+            // Note: This would require passing context or using a callback
         }
     }
 

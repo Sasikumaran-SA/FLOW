@@ -124,7 +124,7 @@ class AddEditNoteFragment : Fragment() {
                 note?.let {
                     currentNote = it
                     titleEditText.setText(it.title)
-                    isNoteLocked = it.isLocked
+                    isNoteLocked = it.locked
                     currentPasswordHash = it.passwordHash
 
                     // --- SIMPLIFIED LOGIC ---
@@ -266,14 +266,14 @@ class AddEditNoteFragment : Fragment() {
 
             val noteToSave = currentNote?.copy(
                 title = title,
-                content = content, // Save plain text
-                isLocked = false,
+                content = content, // Save plain text for unlocked notes
+                locked = false,
                 passwordHash = null,
                 lastModified = System.currentTimeMillis()
             ) ?: Note(
                 title = title,
                 content = content,
-                isLocked = false,
+                locked = false,
                 passwordHash = null,
                 userId = userId,
                 lastModified = System.currentTimeMillis()
@@ -301,14 +301,14 @@ class AddEditNoteFragment : Fragment() {
         val noteToSave = currentNote?.copy(
             title = title,
             content = encryptedContent, // Save encrypted text
-            isLocked = true,
+            locked = true,
             passwordHash = currentPasswordHash, // Hash remains the same
             lastModified = System.currentTimeMillis()
         ) ?: Note(
             // This case handles a NEW note that is locked before first save
             title = title,
             content = encryptedContent,
-            isLocked = true,
+            locked = true,
             passwordHash = currentPasswordHash,
             userId = userId,
             lastModified = System.currentTimeMillis()

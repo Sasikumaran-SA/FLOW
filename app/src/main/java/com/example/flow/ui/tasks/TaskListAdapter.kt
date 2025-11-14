@@ -41,10 +41,10 @@ class TaskListAdapter(
 
         fun bind(task: Task) {
             titleTextView.text = task.title
-            completedCheckBox.isChecked = task.isCompleted
+            completedCheckBox.isChecked = task.completed
 
             // Set strike-through for completed tasks
-            if (task.isCompleted) {
+            if (task.completed) {
                 titleTextView.paintFlags = titleTextView.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
             } else {
                 titleTextView.paintFlags = titleTextView.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
@@ -60,15 +60,15 @@ class TaskListAdapter(
 
             // Set priority
             when (task.priority) {
-                3 -> { // High
+                1 -> { // High
                     priorityTextView.text = "High"
                     priorityTextView.backgroundTintList = ContextCompat.getColorStateList(context, android.R.color.holo_red_dark)
                 }
                 2 -> { // Medium
-                    priorityTextView.text = "Med"
+                    priorityTextView.text = "Medium"
                     priorityTextView.backgroundTintList = ContextCompat.getColorStateList(context, android.R.color.holo_orange_light)
                 }
-                else -> { // Low
+                else -> { // Low (3)
                     priorityTextView.text = "Low"
                     priorityTextView.backgroundTintList = ContextCompat.getColorStateList(context, android.R.color.holo_green_light)
                 }
@@ -83,7 +83,7 @@ class TaskListAdapter(
             // 1. Set listener to null to prevent firing while we set the initial state
             completedCheckBox.setOnCheckedChangeListener(null)
             // 2. Set the checked state based on the task data
-            completedCheckBox.isChecked = task.isCompleted
+            completedCheckBox.isChecked = task.completed
             // 3. Now, set the *real* listener
             completedCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 onTaskChecked(task, isChecked)

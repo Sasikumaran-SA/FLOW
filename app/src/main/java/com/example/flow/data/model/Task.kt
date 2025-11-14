@@ -15,5 +15,5 @@ data class Task(
     val deadline: Long? = null,
     val priority: Int = 1,                         // ADDED default
     val listName: String = "Default",              // ADDED default
-    val isCompleted: Boolean = false               // ADDED default
+    val completed: Boolean = false                  // CHANGED from isCompleted
 )

@@ -20,7 +20,7 @@ interface TaskDao {
 
     // Using Flow means this function will automatically emit new data
     // whenever the 'tasks' table changes.
-    @Query("SELECT * FROM tasks WHERE userId = :userId ORDER BY isCompleted ASC, priority DESC, deadline ASC")
+    @Query("SELECT * FROM tasks WHERE userId = :userId ORDER BY completed ASC, priority DESC, deadline ASC")
     fun getAllTasks(userId: String): Flow<List<Task>>
 
     @Query("SELECT * FROM tasks WHERE id = :taskId")

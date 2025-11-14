@@ -134,10 +134,16 @@ class FinanceFragment : Fragment() {
             }
         }
 
-        val spendingTextView = view?.findViewById<TextView>(R.id.text_monthly_spending)
-        financeViewModel.monthlySpending.observe(viewLifecycleOwner) { spending ->
-            val format = NumberFormat.getCurrencyInstance()
-            spendingTextView?.text = format.format(spending)
+        val incomeTextView = view?.findViewById<TextView>(R.id.text_total_income)
+        val expenseTextView = view?.findViewById<TextView>(R.id.text_total_expense)
+        val format = NumberFormat.getCurrencyInstance()
+        
+        financeViewModel.totalIncome.observe(viewLifecycleOwner) { income ->
+            incomeTextView?.text = format.format(income)
+        }
+        
+        financeViewModel.totalExpense.observe(viewLifecycleOwner) { expense ->
+            expenseTextView?.text = format.format(expense)
         }
     }
 }

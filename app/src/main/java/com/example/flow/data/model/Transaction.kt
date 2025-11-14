@@ -13,5 +13,6 @@ data class Transaction(
     val amount: Double = 0.0,
     val date: Long = 0L,
     val isIncome: Boolean = false,
-    val category: String = ""
+    val category: String = "",
+    val receiptImageUrl: String? = null
 )

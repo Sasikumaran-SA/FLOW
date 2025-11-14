@@ -18,7 +18,7 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: NoteRepository
     val allNotes: LiveData<List<Note>>
     private val auth = FirebaseAuth.getInstance()
-    private var hasSynced = false
+    private var hasListenerBeenSet = false
 
     init {
         val db = AppDatabase.getDatabase(application)
@@ -30,17 +30,18 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
         allNotes = repository.getAllNotes().asLiveData()
 
-        // Sync data and attempt to clear pending deletions on startup
-        syncNotes()
+        // Setup sync and realtime listener on startup
+        setupSyncAndListener()
         attemptPendingDeletions()
     }
 
-    private fun syncNotes() {
-        if (!hasSynced && auth.currentUser != null) {
+    private fun setupSyncAndListener() {
+        if (!hasListenerBeenSet && auth.currentUser != null) {
             viewModelScope.launch {
                 repository.syncNotesFromFirebase()
-                hasSynced = true
             }
+            repository.setupRealtimeListener()
+            hasListenerBeenSet = true
         }
     }
 
@@ -73,6 +74,11 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
+    }
+
+    fun onLogout() {
+        repository.removeListener()
+        hasListenerBeenSet = false
     }
 
     // ... (Your hashPassword and encrypt/decrypt functions remain unchanged) ...

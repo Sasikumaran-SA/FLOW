@@ -60,7 +60,7 @@ class AddEditTaskFragment : Fragment() {
             binding.buttonDeleteTask.visibility = View.VISIBLE
         } ?: run {
             // --- ADD MODE ---
-            // Set default priority to Low
+            // Set default priority to High (1)
             binding.spinnerTaskPriority.setSelection(0)
             binding.buttonDeleteTask.visibility = View.GONE
         }
@@ -80,7 +80,7 @@ class AddEditTaskFragment : Fragment() {
             task?.let {
                 currentTask = it
                 binding.editTextTaskTitle.setText(it.title)
-                // Set spinner priority (0=Low, 1=Med, 2=High). Our data is 1, 2, 3.
+                // Priority mapping: 1=High (index 0), 2=Medium (index 1), 3=Low (index 2)
                 binding.spinnerTaskPriority.setSelection(it.priority - 1)
                 it.deadline?.let { deadline ->
                     selectedDeadline = deadline
@@ -140,7 +140,7 @@ class AddEditTaskFragment : Fragment() {
             return
         }
 
-        // Get priority (0=Low, 1=Med, 2=High) -> Add 1 to store as (1, 2, 3)
+        // Get priority: Spinner position 0=High(1), 1=Medium(2), 2=Low(3)
         val priority = binding.spinnerTaskPriority.selectedItemPosition + 1
         val userId = viewModel.getCurrentUserId()
 
@@ -156,9 +156,10 @@ class AddEditTaskFragment : Fragment() {
                 title = title,
                 priority = priority,
                 deadline = selectedDeadline,
-                isCompleted = false,
-                userId = userId
-                // description and listName use default values
+                completed = false,
+                userId = userId,
+                description = null  // Always null to match web app
+                // listName uses default value "Default"
             )
             viewModel.insert(newTask)
             Toast.makeText(requireContext(), "Task Saved", Toast.LENGTH_SHORT).show()
@@ -167,7 +168,8 @@ class AddEditTaskFragment : Fragment() {
             val updatedTask = currentTask!!.copy(
                 title = title,
                 priority = priority,
-                deadline = selectedDeadline
+                deadline = selectedDeadline,
+                description = null  // Always null to match web app
             )
             viewModel.update(updatedTask)
             Toast.makeText(requireContext(), "Task Updated", Toast.LENGTH_SHORT).show()

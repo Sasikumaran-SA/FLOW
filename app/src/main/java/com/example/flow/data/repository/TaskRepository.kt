@@ -7,8 +7,13 @@ import com.example.flow.data.model.PendingDeletion
 import com.example.flow.data.model.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -20,6 +25,7 @@ class TaskRepository(
 
     private val auth = FirebaseAuth.getInstance()
     private val COLLECTION_NAME = "tasks" // --- ADDED ---
+    private var taskListenerRegistration: ListenerRegistration? = null
 
     private fun getUserId(): String? {
         return auth.currentUser?.uid
@@ -144,5 +150,59 @@ class TaskRepository(
                 Log.e("TaskRepository", "Failed to delete $id from Firebase. Will retry later.", e)
             }
         }
+    }
+
+    fun setupRealtimeListener() {
+        val userId = getUserId()
+        if (userId == null) {
+            Log.w("TaskRepository", "Cannot setup listener, user not logged in.")
+            return
+        }
+
+        taskListenerRegistration?.remove()
+        val tasksCollection = getTasksCollection(userId)
+
+        taskListenerRegistration = tasksCollection.addSnapshotListener { snapshots, error ->
+            if (error != null) {
+                Log.e("TaskRepository", "Firebase listener failed.", error)
+                return@addSnapshotListener
+            }
+            if (snapshots == null) return@addSnapshotListener
+
+            CoroutineScope(Dispatchers.IO).launch {
+                handleSnapshotChanges(snapshots)
+            }
+        }
+        Log.d("TaskRepository", "Real-time task listener attached.")
+    }
+
+    private suspend fun handleSnapshotChanges(snapshots: QuerySnapshot) {
+        val deletedIds = pendingDeletionDao.getPendingDeletionIdsByCollection(COLLECTION_NAME)
+
+        for (docChange in snapshots.documentChanges) {
+            try {
+                val task = docChange.document.toObject(Task::class.java)
+                when (docChange.type) {
+                    com.google.firebase.firestore.DocumentChange.Type.ADDED,
+                    com.google.firebase.firestore.DocumentChange.Type.MODIFIED -> {
+                        if (task.id !in deletedIds) {
+                            taskDao.insertTask(task)
+                        }
+                    }
+                    com.google.firebase.firestore.DocumentChange.Type.REMOVED -> {
+                        taskDao.deleteTask(task)
+                        pendingDeletionDao.delete(PendingDeletion(task.id, COLLECTION_NAME))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("TaskRepository", "Error processing snapshot change.", e)
+            }
+        }
+    }
+
+    fun removeListener() {
+        taskListenerRegistration?.remove()
+        taskListenerRegistration = null
+        Log.d("TaskRepository", "Task listener removed.")
     }
 }

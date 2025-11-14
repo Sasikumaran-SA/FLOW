@@ -54,7 +54,7 @@ class NotesFragment : Fragment() {
     private fun setupRecyclerView(view: View) {
         noteAdapter = NoteListAdapter { note ->
             // --- THIS IS THE MAIN LOGIC FIX ---
-            if (note.isLocked) {
+            if (note.locked) {
                 // If the note is locked, show password dialog FIRST
                 showPasswordDialog(note)
             } else {
@@ -107,7 +107,7 @@ class NotesFragment : Fragment() {
 
                 } catch (e: Exception) {
                     // This can happen if decryption fails for some reason
-                    Toast.makeText(context, "Decryption failed.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Decryption failed. Incorrect password or corrupted data.", Toast.LENGTH_LONG).show()
                 }
             } else {
                 // Password hash does not match

@@ -46,8 +46,8 @@ class TasksFragment : Fragment() {
                 findNavController().navigate(action)
             },
             onTaskChecked = { task, isChecked ->
-                // Create a copy of the task with the new 'isCompleted' status
-                val updatedTask = task.copy(isCompleted = isChecked)
+                // Create a copy of the task with the new 'completed' status
+                val updatedTask = task.copy(completed = isChecked)
                 // Update the task in the database
                 taskViewModel.update(updatedTask)
             }

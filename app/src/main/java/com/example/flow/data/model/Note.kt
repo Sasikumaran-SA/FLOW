@@ -11,7 +11,7 @@ data class Note(
     val userId: String = "",                       // ADDED default
     val title: String = "",                        // ADDED default
     val content: String = "",                      // ADDED default
-    val isLocked: Boolean = false,                 // ADDED default
+    val locked: Boolean = false,                    // CHANGED from isLocked
     val passwordHash: String? = null,
     val lastModified: Long = 0L                    // ADDED default
 )

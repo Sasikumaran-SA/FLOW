@@ -7,8 +7,13 @@ import com.example.flow.data.model.Note
 import com.example.flow.data.model.PendingDeletion
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -19,6 +24,7 @@ class NoteRepository(
 ) {
     private val auth = FirebaseAuth.getInstance()
     private val COLLECTION_NAME = "notes" // --- ADDED ---
+    private var noteListenerRegistration: ListenerRegistration? = null
 
     private fun getUserId(): String? = auth.currentUser?.uid
 
@@ -141,5 +147,60 @@ class NoteRepository(
                 Log.e("NoteRepository", "Failed to delete $id from Firebase. Will retry later.", e)
             }
         }
+    }
+
+    fun setupRealtimeListener() {
+        val userId = getUserId()
+        if (userId == null) {
+            Log.w("NoteRepository", "Cannot setup listener, user not logged in.")
+            return
+        }
+
+        noteListenerRegistration?.remove()
+        val notesCollection = getNotesCollection(userId)
+
+        noteListenerRegistration = notesCollection.addSnapshotListener { snapshots, error ->
+            if (error != null) {
+                Log.e("NoteRepository", "Firebase listener failed.", error)
+                return@addSnapshotListener
+            }
+            if (snapshots == null) return@addSnapshotListener
+
+            CoroutineScope(Dispatchers.IO).launch {
+                handleSnapshotChanges(snapshots)
+            }
+        }
+        Log.d("NoteRepository", "Real-time note listener attached.")
+    }
+
+    private suspend fun handleSnapshotChanges(snapshots: QuerySnapshot) {
+        val deletedIds = pendingDeletionDao.getPendingDeletionIdsByCollection(COLLECTION_NAME)
+
+        for (docChange in snapshots.documentChanges) {
+            try {
+                val note = docChange.document.toObject(Note::class.java)
+                when (docChange.type) {
+                    com.google.firebase.firestore.DocumentChange.Type.ADDED,
+                    com.google.firebase.firestore.DocumentChange.Type.MODIFIED -> {
+                        if (note.id !in deletedIds) {
+                            noteDao.insertNote(note)
+                        }
+                    }
+
+                    com.google.firebase.firestore.DocumentChange.Type.REMOVED -> {
+                        noteDao.deleteNote(note)
+                        pendingDeletionDao.delete(PendingDeletion(note.id, COLLECTION_NAME))
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("NoteRepository", "Error processing snapshot change.", e)
+            }
+        }
+    }
+
+    fun removeListener() {
+        noteListenerRegistration?.remove()
+        noteListenerRegistration = null
+        Log.d("NoteRepository", "Note listener removed.")
     }
 }

@@ -33,7 +33,7 @@ class NoteListAdapter(
         fun bind(note: Note) {
             titleTextView.text = note.title
 
-            if (note.isLocked) {
+            if (note.locked) {
                 contentTextView.text = "This note is locked."
                 lockIcon.visibility = View.VISIBLE
             } else {

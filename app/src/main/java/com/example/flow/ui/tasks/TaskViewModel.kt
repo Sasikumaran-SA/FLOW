@@ -18,7 +18,7 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     val allTasks: LiveData<List<Task>>
 
     private val auth = FirebaseAuth.getInstance()
-    private var hasSynced = false
+    private var hasListenerBeenSet = false
 
     init {
         val db = AppDatabase.getDatabase(application)
@@ -30,17 +30,18 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
         allTasks = repository.getAllTasks().asLiveData()
 
-        // Sync data and attempt to clear pending deletions on startup
-        syncTasks()
+        // Setup sync and realtime listener on startup
+        setupSyncAndListener()
         attemptPendingDeletions()
     }
 
-    private fun syncTasks() {
-        if (!hasSynced && auth.currentUser != null) {
+    private fun setupSyncAndListener() {
+        if (!hasListenerBeenSet && auth.currentUser != null) {
             viewModelScope.launch {
                 repository.syncTasksFromFirebase()
-                hasSynced = true
             }
+            repository.setupRealtimeListener()
+            hasListenerBeenSet = true
         }
     }
 
@@ -73,5 +74,10 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
+    }
+
+    fun onLogout() {
+        repository.removeListener()
+        hasListenerBeenSet = false
     }
 }
