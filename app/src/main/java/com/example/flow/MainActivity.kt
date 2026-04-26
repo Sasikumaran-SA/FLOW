@@ -35,8 +35,6 @@ class MainActivity : AppCompatActivity() {
         // Set up the Toolbar
         setSupportActionBar(toolbar)
 
-        // Define top-level destinations (the 3 bottom nav tabs)
-        // This makes the "Up" arrow (back button) only show on non-top-level screens.
         appBarConfiguration = AppBarConfiguration(
             setOf(R.id.nav_tasks, R.id.nav_finance, R.id.nav_notes)
         )
@@ -44,14 +42,8 @@ class MainActivity : AppCompatActivity() {
         // Link NavController to Toolbar
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        // --- START OF FIX ---
-        // We are replacing bottomNavView.setupWithNavController(navController)
-        // with a manual listener to allow navigating back from Settings.
 
         bottomNavView.setOnItemSelectedListener { item ->
-            // This ensures that tapping a tab always pops the back stack
-            // to the start destination (Tasks), preventing a deep stack
-            // of Tasks -> Settings -> Tasks -> Settings ...
             val navOptions = NavOptions.Builder()
                 .setLaunchSingleTop(true)
                 .setPopUpTo(navController.graph.startDestinationId, false)
@@ -74,8 +66,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // We also need to manually update the bottom bar's selected item
-        // when we navigate via other means (e.g., the "Up" button)
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.nav_tasks -> bottomNavView.menu.findItem(R.id.nav_tasks).isChecked = true
@@ -83,7 +73,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_notes -> bottomNavView.menu.findItem(R.id.nav_notes).isChecked = true
             }
         }
-        // --- END OF FIX ---
     }
 
     // This enables the "Up" button (back arrow) in the toolbar
@@ -101,10 +90,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_settings -> {
-                // --- THIS IS THE FIX ---
-                // Check if we are already at the settings destination before navigating
                 if (navController.currentDestination?.id != R.id.settingsFragment) {
-                    // FIX: Corrected R.idID to R.id
                     navController.navigate(R.id.action_global_to_settingsFragment)
                 }
                 true

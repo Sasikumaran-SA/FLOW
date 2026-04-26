@@ -14,9 +14,9 @@ import com.example.flow.data.model.Transaction
         Task::class,
         Transaction::class,
         Note::class,
-        PendingDeletion::class // --- ADD THIS LINE ---
+        PendingDeletion::class
     ],
-    version = 2, // --- INCREMENT YOUR DATABASE VERSION ---
+    version = 2,
     exportSchema = false
 )
 public abstract class AppDatabase : RoomDatabase() {
@@ -24,7 +24,7 @@ public abstract class AppDatabase : RoomDatabase() {
     public abstract fun taskDao(): TaskDao
     public abstract fun transactionDao(): TransactionDao
     public abstract fun noteDao(): NoteDao
-    public abstract fun pendingDeletionDao(): PendingDeletionDao // --- ADD THIS LINE ---
+    public abstract fun pendingDeletionDao(): PendingDeletionDao
 
     companion object {
         @Volatile
@@ -37,9 +37,7 @@ public abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "flow_database"
                 )
-                    // --- ADD MIGRATION IF version > 1 ---
-                    // You must add a migration or use fallbackToDestructiveMigration
-                    .fallbackToDestructiveMigration() // Easiest for development
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

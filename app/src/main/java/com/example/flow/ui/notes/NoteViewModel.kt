@@ -23,14 +23,12 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
     init {
         val db = AppDatabase.getDatabase(application)
         val noteDao = db.noteDao()
-        val pendingDeletionDao = db.pendingDeletionDao() // --- ADDED ---
+        val pendingDeletionDao = db.pendingDeletionDao()
         val firestore = FirebaseFirestore.getInstance()
-        // --- UPDATED CONSTRUCTOR ---
         repository = NoteRepository(noteDao, pendingDeletionDao, firestore)
 
         allNotes = repository.getAllNotes().asLiveData()
 
-        // Setup sync and realtime listener on startup
         setupSyncAndListener()
         attemptPendingDeletions()
     }
@@ -45,7 +43,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // --- ADDED ---
     private fun attemptPendingDeletions() {
         if (auth.currentUser != null) {
             viewModelScope.launch {
@@ -64,7 +61,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
 
     fun delete(note: Note) = viewModelScope.launch {
         repository.delete(note)
-        // Try to delete from Firebase immediately
         attemptPendingDeletions()
     }
 
@@ -80,8 +76,6 @@ class NoteViewModel(application: Application) : AndroidViewModel(application) {
         repository.removeListener()
         hasListenerBeenSet = false
     }
-
-    // ... (Your hashPassword and encrypt/decrypt functions remain unchanged) ...
 
     fun hashPassword(password: String): String {
         val bytes = password.toByteArray()

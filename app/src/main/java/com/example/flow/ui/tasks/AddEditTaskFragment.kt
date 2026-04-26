@@ -25,10 +25,8 @@ class AddEditTaskFragment : Fragment() {
     private var _binding: FragmentAddEditTaskBinding? = null
     private val binding get() = _binding!!
 
-    // Shared ViewModel, scoped to the navigation graph
     private lateinit var viewModel: TaskViewModel
 
-    // Safe-Args to get the taskId from the navigation action
     private val args: AddEditTaskFragmentArgs by navArgs()
 
     private var currentTask: Task? = null
@@ -53,14 +51,12 @@ class AddEditTaskFragment : Fragment() {
         setupSpinner()
         setupDatePicker()
 
-        // Check if we are in "Edit Mode" or "Add Mode"
         args.taskId?.let { id ->
             // --- EDIT MODE ---
             loadTaskData(id)
             binding.buttonDeleteTask.visibility = View.VISIBLE
         } ?: run {
             // --- ADD MODE ---
-            // Set default priority to High (1)
             binding.spinnerTaskPriority.setSelection(0)
             binding.buttonDeleteTask.visibility = View.GONE
         }
@@ -80,7 +76,6 @@ class AddEditTaskFragment : Fragment() {
             task?.let {
                 currentTask = it
                 binding.editTextTaskTitle.setText(it.title)
-                // Priority mapping: 1=High (index 0), 2=Medium (index 1), 3=Low (index 2)
                 binding.spinnerTaskPriority.setSelection(it.priority - 1)
                 it.deadline?.let { deadline ->
                     selectedDeadline = deadline
@@ -110,7 +105,6 @@ class AddEditTaskFragment : Fragment() {
             calendar.set(Calendar.YEAR, year)
             calendar.set(Calendar.MONTH, month)
             calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
-            // Set time to avoid timezone issues, e.g., end of day
             calendar.set(Calendar.HOUR_OF_DAY, 23)
             calendar.set(Calendar.MINUTE, 59)
             selectedDeadline = calendar.timeInMillis
@@ -140,7 +134,6 @@ class AddEditTaskFragment : Fragment() {
             return
         }
 
-        // Get priority: Spinner position 0=High(1), 1=Medium(2), 2=Low(3)
         val priority = binding.spinnerTaskPriority.selectedItemPosition + 1
         val userId = viewModel.getCurrentUserId()
 
@@ -150,7 +143,6 @@ class AddEditTaskFragment : Fragment() {
         }
 
         if (currentTask == null) {
-            // --- Create New Task ---
             val newTask = Task(
                 id = UUID.randomUUID().toString(),
                 title = title,
@@ -158,18 +150,16 @@ class AddEditTaskFragment : Fragment() {
                 deadline = selectedDeadline,
                 completed = false,
                 userId = userId,
-                description = null  // Always null to match web app
-                // listName uses default value "Default"
+                description = null
             )
             viewModel.insert(newTask)
             Toast.makeText(requireContext(), "Task Saved", Toast.LENGTH_SHORT).show()
         } else {
-            // --- Update Existing Task ---
             val updatedTask = currentTask!!.copy(
                 title = title,
                 priority = priority,
                 deadline = selectedDeadline,
-                description = null  // Always null to match web app
+                description = null
             )
             viewModel.update(updatedTask)
             Toast.makeText(requireContext(), "Task Updated", Toast.LENGTH_SHORT).show()

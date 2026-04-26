@@ -103,18 +103,12 @@ class SettingsFragment : Fragment() {
 
         val userId = user.uid
 
-        // 1. (Optional but good practice) Delete user's data from Firestore/Storage
-        // This is complex, as it requires deleting all sub-collections.
-        // For this project, we'll just delete the user auth.
-        // A full app would use a Cloud Function for this.
-        // We will just delete the user document.
-
         firestore.collection("users").document(userId).delete()
             .addOnFailureListener {
                 Toast.makeText(context, "Failed to delete user data: ${it.message}", Toast.LENGTH_SHORT).show()
             }
 
-        // 2. Delete the user from Firebase Auth
+        // Delete the user from Firebase Auth
         user.delete()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {

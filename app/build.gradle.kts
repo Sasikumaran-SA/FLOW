@@ -2,11 +2,9 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    // --- CHANGE THIS LINE ---
-    id("com.google.devtools.ksp") // Use the full ID instead of "kotlin-ksp"
-    // ---
-    id("androidx.navigation.safeargs.kotlin") // For Navigation Safe Args
-    id("com.google.gms.google-services") // For Firebase
+    id("com.google.devtools.ksp")
+    id("androidx.navigation.safeargs.kotlin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -15,14 +13,13 @@ android {
 
     defaultConfig {
         applicationId = "com.example.flow"
-        minSdk = 26 // Min SDK 26 is needed for Biometrics
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Add this for KSP (Room)
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }
@@ -44,13 +41,11 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-    // Enable View Binding (if you use it)
     buildFeatures {
         viewBinding = true
     }
 }
 
-// Define versions in one place
 val lifecycleVersion = "2.8.3"
 val roomVersion = "2.6.1"
 val navVersion = "2.7.7"
@@ -63,9 +58,8 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
     // --- Lifecycle (ViewModel, LiveData, Transformations) ---
-    // FIX: ADDED lifecycle-livedata-ktx
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion") // <-- THIS LINE IS THE FIX
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
     // ---
 
@@ -83,7 +77,6 @@ dependencies {
     // --- Coroutines ---
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    // For Firebase .await()
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     // ---
 
@@ -101,7 +94,6 @@ dependencies {
     // ---
 
     // --- Image Loading (Glide) ---
-    // Added this to support loading receipt images
     implementation("com.github.bumptech.glide:glide:4.16.0")
     // ---
 

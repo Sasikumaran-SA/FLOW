@@ -23,15 +23,12 @@ class TasksFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_tasks, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize ViewModel
-        // FIX: Use the shared ViewModel from the nav graph
         taskViewModel = ViewModelProvider(findNavController().getViewModelStoreOwner(R.id.main_nav_graph))
             .get(TaskViewModel::class.java)
 
@@ -39,9 +36,6 @@ class TasksFragment : Fragment() {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recycler_view_tasks)
         taskListAdapter = TaskListAdapter(
             onTaskClicked = { task ->
-                // Navigate to AddEditTaskFragment with the task ID
-                // FIX: This action name matches main_nav_graph.xml
-                // This line will NOW work because the import was added
                 val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(task.id)
                 findNavController().navigate(action)
             },
@@ -66,9 +60,6 @@ class TasksFragment : Fragment() {
         // Setup FAB
         val fab = view.findViewById<FloatingActionButton>(R.id.fab_add_task)
         fab.setOnClickListener {
-            // Navigate to AddEditTaskFragment with no task ID (for creating a new task)
-            // FIX: This action name matches main_nav_graph.xml
-            // This line will NOW work because the import was added
             val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(null)
             findNavController().navigate(action)
         }

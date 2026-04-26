@@ -26,15 +26,12 @@ class NotesFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_notes, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Use 'requireActivity()' to scope the ViewModel to the Activity
-        // This makes it easier to share the same ViewModel instance
         viewModel = ViewModelProvider(requireActivity()).get(NoteViewModel::class.java)
 
         setupRecyclerView(view)
@@ -44,8 +41,6 @@ class NotesFragment : Fragment() {
         }
 
         view.findViewById<FloatingActionButton>(R.id.fab_add_note).setOnClickListener {
-            // Navigate to AddEditNoteFragment for a NEW note
-            // Pass null for noteId and null for decryptedContent
             val action = NotesFragmentDirections.actionNavNotesToAddEditNoteFragment(null, null)
             findNavController().navigate(action)
         }
@@ -53,13 +48,9 @@ class NotesFragment : Fragment() {
 
     private fun setupRecyclerView(view: View) {
         noteAdapter = NoteListAdapter { note ->
-            // --- THIS IS THE MAIN LOGIC FIX ---
             if (note.locked) {
-                // If the note is locked, show password dialog FIRST
                 showPasswordDialog(note)
             } else {
-                // Note is not locked, navigate directly
-                // Pass the note's ID and its (unlocked) content
                 val action = NotesFragmentDirections.actionNavNotesToAddEditNoteFragment(note.id, note.content)
                 findNavController().navigate(action)
             }
@@ -70,10 +61,6 @@ class NotesFragment : Fragment() {
         recyclerView.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
     }
 
-    /**
-     * Shows a password prompt dialog to unlock a note.
-     * Only navigates to the editor on success.
-     */
     private fun showPasswordDialog(note: Note) {
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle(getString(R.string.unlock_note_title))

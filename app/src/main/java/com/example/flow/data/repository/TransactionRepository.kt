@@ -18,41 +18,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
-//fab.setOnClickListener {
-//    Log.d("FirebaseTest", "FAB clicked. Attempting direct write...")
-//    Toast.makeText(context, "Running Firebase Test...", Toast.LENGTH_SHORT).show()
-//
-//    val auth = FirebaseAuth.getInstance()
-//    val firestore = FirebaseFirestore.getInstance()
-//
-//    val userId = auth.currentUser?.uid
-//    if (userId == null) {
-//        Log.e("FirebaseTest", "Test FAILED: User is null. Not logged in.")
-//        Toast.makeText(context, "TEST FAILED: User is null", Toast.LENGTH_SHORT).show()
-//        return@setOnClickListener
-//    }
-//
-//    Log.d("FirebaseTest", "User is: $userId. Creating test document...")
-//
-//    val testDoc = hashMapOf(
-//        "testName" to "My Test Transaction",
-//        "timestamp" to System.currentTimeMillis()
-//    )
-//
-//    // This writes to /users/{userId}/test_collection/test_doc
-//    firestore.collection("users").document(userId)
-//        .collection("test_collection").document("test_doc")
-//        .set(testDoc)
-//        .addOnSuccessListener {
-//            Log.d("FirebaseTest", "SUCCESS! Direct write to Firestore worked.")
-//            Toast.makeText(context, "TEST SUCCESS: Data written!", Toast.LENGTH_SHORT).show()
-//        }
-//        .addOnFailureListener { e ->
-//            Log.e("FirebaseTest", "FAILURE! Direct write FAILED.", e)
-//            Toast.makeText(context, "TEST FAILED: ${e.message}", Toast.LENGTH_LONG).show()
-//        }
-//}
-
 class TransactionRepository(
     private val transactionDao: TransactionDao,
     private val pendingDeletionDao: PendingDeletionDao,
@@ -84,7 +49,7 @@ class TransactionRepository(
     }
 
     suspend fun insert(transaction: Transaction) {
-        val userId = transaction.userId // Use userId from the object
+        val userId = transaction.userId
         transactionDao.insertTransaction(transaction)
 
         if (userId.isEmpty()) {
@@ -92,22 +57,18 @@ class TransactionRepository(
             return
         }
         try {
-            // Create a document reference to get the ID
             val docRef = getTransactionsCollection(userId).document()
-            // Create a new transaction object with the document ID included
             val transactionWithId = transaction.copy(id = docRef.id)
             docRef.set(transactionWithId).await()
             Log.d("TransactionRepo", "SUCCESS! Transaction written to Firestore: ${docRef.id}")
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.e("TransactionRepo", "Error inserting transaction to Firestore", e)
-            // Show user-facing alert on save failure
-            // Note: This would require passing context or using a callback
         }
     }
 
     suspend fun update(transaction: Transaction) {
-        val userId = transaction.userId // Use userId from the object
+        val userId = transaction.userId
         transactionDao.updateTransaction(transaction)
 
         if (userId.isEmpty()) {
@@ -115,13 +76,10 @@ class TransactionRepository(
             return
         }
         try {
-            // Ensure the transaction object includes the document ID
             getTransactionsCollection(userId).document(transaction.id).set(transaction).await()
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.e("TransactionRepo", "Error updating transaction in Firestore", e)
-            // Show user-facing alert on save failure
-            // Note: This would require passing context or using a callback
         }
     }
 

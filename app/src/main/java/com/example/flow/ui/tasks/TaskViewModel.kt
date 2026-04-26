@@ -23,9 +23,8 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
     init {
         val db = AppDatabase.getDatabase(application)
         val taskDao = db.taskDao()
-        val pendingDeletionDao = db.pendingDeletionDao() // --- ADDED ---
+        val pendingDeletionDao = db.pendingDeletionDao()
         val firestore = FirebaseFirestore.getInstance()
-        // --- UPDATED CONSTRUCTOR ---
         repository = TaskRepository(taskDao, pendingDeletionDao, firestore)
 
         allTasks = repository.getAllTasks().asLiveData()
@@ -45,7 +44,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // --- ADDED ---
     private fun attemptPendingDeletions() {
         if (auth.currentUser != null) {
             viewModelScope.launch {
@@ -64,7 +62,6 @@ class TaskViewModel(application: Application) : AndroidViewModel(application) {
 
     fun delete(task: Task) = viewModelScope.launch {
         repository.delete(task)
-        // Try to delete from Firebase immediately
         attemptPendingDeletions()
     }
 

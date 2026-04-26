@@ -19,11 +19,11 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class NoteRepository(
     private val noteDao: NoteDao,
-    private val pendingDeletionDao: PendingDeletionDao, // --- ADDED ---
+    private val pendingDeletionDao: PendingDeletionDao,
     private val firestore: FirebaseFirestore
 ) {
     private val auth = FirebaseAuth.getInstance()
-    private val COLLECTION_NAME = "notes" // --- ADDED ---
+    private val COLLECTION_NAME = "notes"
     private var noteListenerRegistration: ListenerRegistration? = null
 
     private fun getUserId(): String? = auth.currentUser?.uid
@@ -31,7 +31,7 @@ class NoteRepository(
     private fun getNotesCollection(userId: String) = firestore
         .collection("users")
         .document(userId)
-        .collection(COLLECTION_NAME) // --- UPDATED ---
+        .collection(COLLECTION_NAME)
 
     fun getAllNotes(): Flow<List<Note>> {
         val userId = getUserId()
@@ -47,10 +47,8 @@ class NoteRepository(
     }
 
     suspend fun insert(note: Note) {
-        // 1. Insert into local Room database
         noteDao.insertNote(note)
 
-        // 2. Insert into remote Firestore database (only if online)
         val userId = getUserId()
         if (userId == null) {
             Log.w("NoteRepository", "User is offline. Note saved locally.")
@@ -66,10 +64,8 @@ class NoteRepository(
     }
 
     suspend fun update(note: Note) {
-        // 1. Update in local Room database
         noteDao.updateNote(note)
 
-        // 2. Update in remote Firestore database (only if online)
         val userId = getUserId()
         if (userId == null) {
             Log.w("NoteRepository", "User is offline. Note updated locally.")
@@ -84,16 +80,12 @@ class NoteRepository(
         }
     }
 
-    // --- UPDATED DELETE LOGIC ---
     suspend fun delete(note: Note) {
-        // 1. Delete from local Room database FIRST
         noteDao.deleteNote(note)
-        // 2. Add to pending deletions queue
         pendingDeletionDao.insert(PendingDeletion(id = note.id, collectionName = COLLECTION_NAME))
         Log.d("NoteRepository", "Note deleted locally and queued for remote deletion.")
     }
 
-    // --- UPDATED SYNC LOGIC ---
     suspend fun syncNotesFromFirebase() {
         val userId = getUserId()
         if (userId == null) {
@@ -102,16 +94,12 @@ class NoteRepository(
         }
 
         try {
-            // 1. Get IDs of all locally deleted items
             val deletedIds = pendingDeletionDao.getPendingDeletionIdsByCollection(COLLECTION_NAME)
 
-            // 2. Get all items from Firebase
             val snapshot = getNotesCollection(userId).get().await()
             val notes = snapshot.toObjects(Note::class.java)
 
-            // 3. Sync to Room
             for (note in notes) {
-                // ONLY insert if the note is NOT in our pending deletion queue
                 if (note.id !in deletedIds) {
                     noteDao.insertNote(note)
                 }
@@ -123,7 +111,6 @@ class NoteRepository(
         }
     }
 
-    // --- ADDED FUNCTION ---
     suspend fun attemptPendingDeletions() {
         val userId = getUserId()
         if (userId == null) {

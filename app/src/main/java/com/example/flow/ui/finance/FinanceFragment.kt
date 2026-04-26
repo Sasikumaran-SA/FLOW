@@ -20,11 +20,10 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.flow.R
-import com.example.flow.SessionState // You need to create this object
+import com.example.flow.SessionState
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.NumberFormat
 
-// Create this file (e.g., in your app's root package)
 object SessionState {
     var financeAuthenticated = false
 }
@@ -109,7 +108,6 @@ class FinanceFragment : Fragment() {
         when (biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)) {
             BiometricManager.BIOMETRIC_SUCCESS ->
                 biometricPrompt.authenticate(promptInfo)
-            // Handle errors
             else ->
                 Toast.makeText(context, "Biometric features not available or not enrolled.", Toast.LENGTH_LONG).show()
         }
@@ -118,7 +116,7 @@ class FinanceFragment : Fragment() {
     private fun showFinanceData() {
         authOverlay.visibility = View.GONE
         contentLayout.visibility = View.VISIBLE
-        fab.show() // Show the FAB only after auth
+        fab.show()
 
         val recyclerView = view?.findViewById<RecyclerView>(R.id.recycler_view_transactions)
         transactionListAdapter = TransactionListAdapter { transaction ->

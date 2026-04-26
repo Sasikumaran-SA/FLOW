@@ -12,12 +12,10 @@
         amet.
     </string>
 
-    <!-- Phase 5: Finance -->
     <string name="biometric_title">Biometric login for Finances</string>
     <string name="biometric_subtitle">Log in using your biometric credential or screen lock</string>
     <string name="monthly_spending_label">Monthly Spending: %s</string>
 
-    <!-- Phase 6: Notes -->
     <string name="speech_to_text_desc">Speak to add text</string>
     <string name="lock_note">Lock note</string>
     <string name="unlock_note">Unlock note</string>
@@ -36,7 +34,6 @@
     <string name="password_removed">Password removed. Note will be unlocked on save.</string>
     <string name="incorrect_password">Incorrect password</string>
 
-    <!-- Phase 7: Settings -->
     <string name="settings">Settings</string>
     <string name="logout">Log Out</string>
     <string name="logout_confirm_message">Are you sure you want to log out?</string>

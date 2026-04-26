@@ -60,15 +60,15 @@ class TaskListAdapter(
 
             // Set priority
             when (task.priority) {
-                1 -> { // High
+                1 -> {
                     priorityTextView.text = "High"
                     priorityTextView.backgroundTintList = ContextCompat.getColorStateList(context, android.R.color.holo_red_dark)
                 }
-                2 -> { // Medium
+                2 -> {
                     priorityTextView.text = "Medium"
                     priorityTextView.backgroundTintList = ContextCompat.getColorStateList(context, android.R.color.holo_orange_light)
                 }
-                else -> { // Low (3)
+                else -> {
                     priorityTextView.text = "Low"
                     priorityTextView.backgroundTintList = ContextCompat.getColorStateList(context, android.R.color.holo_green_light)
                 }
@@ -79,16 +79,11 @@ class TaskListAdapter(
                 onTaskClicked(task)
             }
 
-            // --- THIS IS THE FIXED LOGIC ---
-            // 1. Set listener to null to prevent firing while we set the initial state
             completedCheckBox.setOnCheckedChangeListener(null)
-            // 2. Set the checked state based on the task data
             completedCheckBox.isChecked = task.completed
-            // 3. Now, set the *real* listener
             completedCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 onTaskChecked(task, isChecked)
             }
-            // --- END OF FIX ---
         }
 
         private fun formatDate(timestamp: Long): String {

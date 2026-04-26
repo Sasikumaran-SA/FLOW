@@ -7,11 +7,11 @@ import java.util.UUID
 @Entity(tableName = "notes")
 data class Note(
     @PrimaryKey
-    val id: String = UUID.randomUUID().toString(), // ADDED default
-    val userId: String = "",                       // ADDED default
-    val title: String = "",                        // ADDED default
-    val content: String = "",                      // ADDED default
-    val locked: Boolean = false,                    // CHANGED from isLocked
+    val id: String = UUID.randomUUID().toString(),
+    val userId: String = "",
+    val title: String = "",
+    val content: String = "",
+    val locked: Boolean = false,
     val passwordHash: String? = null,
-    val lastModified: Long = 0L                    // ADDED default
+    val lastModified: Long = 0L
 )

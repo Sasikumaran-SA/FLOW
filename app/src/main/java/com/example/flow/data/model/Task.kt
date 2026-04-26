@@ -4,16 +4,15 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.UUID
 
-// This annotation tells Room to create a table named "tasks"
 @Entity(tableName = "tasks")
 data class Task(
     @PrimaryKey
-    val id: String = UUID.randomUUID().toString(), // ADDED default
-    val userId: String = "",                       // ADDED default
-    val title: String = "",                        // ADDED default
+    val id: String = UUID.randomUUID().toString(),
+    val userId: String = "",
+    val title: String = "",
     val description: String? = null,
     val deadline: Long? = null,
-    val priority: Int = 1,                         // ADDED default
-    val listName: String = "Default",              // ADDED default
-    val completed: Boolean = false                  // CHANGED from isCompleted
+    val priority: Int = 1,
+    val listName: String = "Default",
+    val completed: Boolean = false
 )
